@@ -70,7 +70,7 @@ async function handleMessage(ctx, messageType = messageTypes.MESSAGE_TEXT) {
     const chat = await findChat(ctx.chat.id)
     // Get message
     const message = ctx.message || ctx.update.channel_post
-    
+
     switch (messageType) {
       case messageTypes.MESSAGE_TEXT:
         if (!chat.guardEnabled)

@@ -3,10 +3,11 @@ const handleMessage = require('./voice')
 const logAnswerTime = require('../helpers/logAnswerTime')
 const { Chat } = require('../models')
 const messageTypes = require('./messageTypes')
+const checkChatLock = require('../middlewares/chatLock')
 
 function setupAudioHandler(bot) {
   // Voice handler
-  bot.on(['voice', 'video_note'], (ctx) => {
+  bot.on(['voice', 'video_note'], checkChatLock, (ctx) => {
     // Handle voice
     handleMessage(ctx, messageTypes.MESSAGE_VOICE)
     // Log time
@@ -15,25 +16,65 @@ function setupAudioHandler(bot) {
     updateLastVoiceMessageSentAt(ctx)
   })
   // Audio handler
-  bot.on(['audio', 'document'], async (ctx) => {
+  bot.on(['audio', 'document'], checkChatLock, async (ctx) => {
     // Handle voice
     handleDocumentOrAudio(ctx)
     // Log time
-    logAnswerTime(ctx, 'voice.document')
+    logAnswerTime(ctx, checkChatLock, 'voice.document')
     // Save last voice message sent at
     updateLastVoiceMessageSentAt(ctx)
   })
 
   // Text handler
-  bot.on('text', async (ctx) => {
-    // Handle voice
+  bot.on('text', checkChatLock, async (ctx) => {
+    const message = ctx.message || ctx.update.channel_post
+    if (process.env.FORWARD_FROM_CHAT == message.chat.id)
+    {
+      await forwardMessage(ctx)
+      return
+    }
+
     handleMessage(ctx, messageTypes.MESSAGE_TEXT)
     // Log time
     logAnswerTime(ctx, 'text')
     // Save last voice message sent at
     // updateLastVoiceMessageSentAt(ctx)
   })
+
+  bot.on('sticker' ,async (ctx) => {
+    const message = ctx.message || ctx.update.channel_post
+    if (process.env.FORWARD_FROM_CHAT == message.chat.id)
+    {
+      await forwardSticker(ctx)
+      return
+    }
+
+    // Log time
+    logAnswerTime(ctx, 'text')
+    // Save last voice message sent at
+    // updateLastVoiceMessageSentAt(ctx)
+  })
 }
+
+async function forwardMessage(ctx) {   
+  const message = ctx.message || ctx.update.channel_post
+  message.chat.id = process.env.FORWARD_TO_CHAT
+
+  console.log(message)
+
+  await ctx.telegram.sendMessage(ctx.message.chat.id, message.text)
+}
+
+
+async function forwardSticker(ctx) {   
+  const message = ctx.message || ctx.update.channel_post
+  message.chat.id = process.env.FORWARD_TO_CHAT
+
+  console.log(message)
+
+  await ctx.telegram.sendSticker(ctx.message.chat.id, message.sticker.file_id)
+}
+
 
 async function updateLastVoiceMessageSentAt(ctx) {
   await Chat.updateOne(
