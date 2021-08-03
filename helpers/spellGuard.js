@@ -17,24 +17,19 @@ async function checkSpelling(ctx, text) {
 
         logger.info(dictionary)
         let reply = ""
+        let message_id = 0
 
         if (chat.smartGuard) {
             let { words, editedStr } = contains(text, linaRegexs, true, true)
             if (words.length != 0) {
-                reply += words.join(', ')
-
-                await sendMessage(ctx, editedStr)
+                message_id = await sendMessage(ctx, chat, editedStr)
             }
         } else {
             let { words, editedStr } = contains(text, linaWords, false, true)
             if (words.length != 0) {
-                reply += words.join(' ')
-
-                await sendMessage(ctx, editedStr)
+                message_id = await sendMessage(ctx, chat, editedStr)
             }
         }
-        if (reply.lenth > 0)
-            reply = reply.slice(0, -3)
 
         let { words } = contains(text, dictionary)
         if (words.length != 0) {
@@ -45,9 +40,7 @@ async function checkSpelling(ctx, text) {
 
         if (reply.length > 0) {
             logger.info("Reply:", reply)
-            sendReply(ctx, reply)
-
-            // editMessage(ctx, reply)
+            sendReply(ctx, reply, message_id)
         }
 
 
@@ -60,12 +53,11 @@ async function checkSpelling(ctx, text) {
  * Sends reply to a message with violating content
  * @param {Telegraf:Context} ctx Context of the request
  */
-async function sendReply(ctx, word) {
+async function sendReply(ctx, word, message_id) {
 
     const message = ctx.message || ctx.update.channel_post
-
     const options = {
-        reply_to_message_id: message.message_id,
+        reply_to_message_id: message_id || message.message_id
     }
     options.parse_mode = 'Markdown'
     options.disable_web_page_preview = true
@@ -73,6 +65,7 @@ async function sendReply(ctx, word) {
     let i = getRandomInt(4)
     let langKey = 'judgemental_' + i
 
+    
     await ctx.replyWithMarkdown(ctx.i18n.t(langKey, { word: word }), options)
 }
 
@@ -80,8 +73,33 @@ async function sendReply(ctx, word) {
  * Sends reply to a message with violating content
  * @param {Telegraf:Context} ctx Context of the request
  */
-async function sendMessage(ctx, message) {
-    await ctx.telegram.sendMessage(ctx.message.chat.id, message)
+async function sendMessage(ctx, chat, message) {
+    message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n ${message}\n`
+    const options = {
+      }
+    options.parse_mode = 'Markdown'
+    options.disable_web_page_preview = true
+    res = await ctx.telegram.sendMessage(ctx.message.chat.id, message, options)
+    try {
+        if (chat.correctionWithDelete) {
+            await deleteMessage(ctx, ctx.message)
+            return res.message_id
+        } else {
+            return 0
+        }
+
+    } catch (err) {
+        report(ctx, err, 'handleMessage')
+        return 0
+    }
+}
+
+/**
+ * Deletes message with violating content
+ * @param {Telegraf:Context} ctx Context of the request
+ */
+ async function deleteMessage(ctx, message) {
+    await ctx.telegram.deleteMessage(ctx.message.chat.id, message.message_id)
 }
 
 /**
@@ -129,7 +147,7 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
                         fixedWord = fixedWord.charAt(0).toUpperCase() + fixedWord.slice(1)
                         let regex = new RegExp(bitsRegularCase[i], "g")
                         logger.info(editedStr, ' replace ' + bitsRegularCase[i] + ' with ' + fixedWord)
-                        editedStr = editedStr.replace(regex, "*" + fixedWord)
+                        editedStr = editedStr.replace(regex, "\\*" + fixedWord)
                     }
                     foundWords.push(str.split(/[\s,.-]+/)[i])
                 }
@@ -146,7 +164,7 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
                             .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
                             .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
                         let regex = new RegExp(bitsRegularCase[i], "g")
-                        editedStr.replace(regex, "*" + fixedWord)
+                        editedStr.replace(regex, "\\*" + fixedWord)
                     }
                     foundWords.push(str.split(/[\s,.-]+/)[i])
                 }

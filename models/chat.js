@@ -65,6 +65,11 @@ const chatSchema = new Schema(
       required: true,
       default: false,
     },
+    correctionWithDelete: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
     dictionary: [String],
     googleSetupMessageId: Number,
     googleKey: String,

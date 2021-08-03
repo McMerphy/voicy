@@ -1,9 +1,6 @@
 // Load env variables
 require('dotenv').config({ path: `${__dirname}/.env` })
 
-
-
-
 // Init
 const setupLogger = require('./init/setupLogger')
 const setupPromises = require('./init/setupPromises')
@@ -35,6 +32,7 @@ const setupUrl = require('./commands/url')
 const setupAdmin = require('./commands/admin')
 const setupPrivacy = require('./commands/privacy')
 const setupWitToken = require('./commands/witToken')
+const setupHardCorrection = require('./commands/hardCorrection')
 // Audio handler
 const setupAudioHandler = require('./helpers/handler')
 // Callbacks
@@ -63,6 +61,7 @@ setupRecognition(bot)
 setupVoiceGuard(bot)
 setupSmartGuard(bot)
 setupGuard(bot)
+setupHardCorrection(bot)
 setupDictionary(bot)
 // setupGoogle(bot)
 // setupGeeky(bot)
