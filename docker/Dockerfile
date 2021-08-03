@@ -32,14 +32,17 @@ RUN \
 	ffmpeg \
 	mongodb \
 	screen && \
- git clone https://github.com/McMerphy/voicy.git /app/voicybot && \
+	mkdir -p /app/voicybot
+
+# add local files
+COPY docker/root/ /
+
+COPY . /app/voicybot/
+
+RUN \
  cd /app/voicybot && \
-#  git checkout develop && \
  yarn install && \
  echo "**** cleanup ****" && \
  rm -rf \
     /root/.cache \
     /tmp/*
-
-# add local files
-COPY root/ /
