@@ -74,9 +74,9 @@ async function sendReply(ctx, word, message_id) {
  * @param {Telegraf:Context} ctx Context of the request
  */
 async function sendMessage(ctx, chat, message) {
-    message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n ${message}\n`
-    const options = {
-      }
+    if (chat.correctionWithDelete)
+        message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n ${message}\n`
+    const options = {}
     options.parse_mode = 'Markdown'
     options.disable_web_page_preview = true
     res = await ctx.telegram.sendMessage(ctx.message.chat.id, message, options)
