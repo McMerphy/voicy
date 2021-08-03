@@ -15,7 +15,9 @@ async function checkSpelling(ctx, text) {
         let dictionary = []
         chat.dictionary.map(elem => dictionary.push(elem))
 
-        logger.info(dictionary)
+        let regexDictionary = []
+        chat.regexDictionary.map(elem => regexDictionary.push(new RegExp(elem, "g")))
+
         let reply = ""
         let message_id = 0
 
@@ -36,6 +38,14 @@ async function checkSpelling(ctx, text) {
             if (reply.length != 0)
                 reply += ', '
             reply += words.join(', ')
+        }
+
+        let words1 = contains(text, regexDictionary, true).words
+        console.log(words1)
+        if (words1.length != 0) {
+            if (reply.length != 0)
+                reply += ', '
+            reply += words1.join(', ')
         }
 
         if (reply.length > 0) {
@@ -138,6 +148,7 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
 
     if (isRegex) {
         for (let regex of dictionary) {
+            console.log(regex)
             for (i = 0; i < bits.length; i++) {
                 if (regex.test(bits[i])) {
                     if (isEdit) {
@@ -149,6 +160,7 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
                         logger.info(editedStr, ' replace ' + bitsRegularCase[i] + ' with ' + fixedWord)
                         editedStr = editedStr.replace(regex, "\\*" + fixedWord)
                     }
+                    console.log("found", str)
                     foundWords.push(str.split(/[\s,.-]+/)[i])
                 }
 

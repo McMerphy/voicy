@@ -57,7 +57,7 @@ timecodes_false: Клево! Теперь *leHabot* не будет добавл
 url: 'Если хотите обойти ограничение в 20МБ на файл, можете использовать voicybot.com напрямую. Удачи!'
 addword_true: 'Вы добавили в словарь для осуждения слова: ${words}\n*Словарь*:\n**${dictionary}**'
 addword_false: 'Слова не были добавлены в словарь\n*Словарь*:\n**${dictionary}**'
-rmword_true: 'Вы удалили из слованя для осуждения слова: ${words}\n*Словарь*:\n**${dictionary}**'
+rmword_true: 'Вы удалили из словаря для осуждения слова: ${words}\n*Словарь*:\n**${dictionary}**'
 rmword_false: 'Из словаря ничего не удалено\n*Словарь*:\n**${dictionary}**'
 dictionary_false: 'Вы должны вписать через пробел слова для осуждения после команды /dictionary'
 dictionary_true: '*Словарь*:\n**${dictionary}**'

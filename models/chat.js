@@ -71,6 +71,7 @@ const chatSchema = new Schema(
       default: true,
     },
     dictionary: [String],
+    regexDictionary: [String],
     googleSetupMessageId: Number,
     googleKey: String,
     witToken: String,
