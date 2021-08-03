@@ -1,6 +1,15 @@
 // Load env variables
 require('dotenv').config({ path: `${__dirname}/.env` })
 
+let fs = require('fs')
+
+var access = fs.createWriteStream('/app/voicybot/log' + '/node.access.log', { flags: 'a' })
+      , error = fs.createWriteStream('/app/voicybot/log' + '/node.error.log', { flags: 'a' });
+
+// redirect stdout / stderr
+process.stdout.pipe(access);
+process.stderr.pipe(error);
+
 // Init
 const setupPromises = require('./init/setupPromises')
 const setupMongoose = require('./init/setupMongoose')
