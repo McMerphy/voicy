@@ -120,9 +120,10 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
             for (i = 0; i < bits.length; i++) {
                 if (regex.test(bits[i])) {
                     if (isEdit) {
-                        let fixedWord = bitsRegularCase[i].replace(/^[е|Е|e|E]/g, '')
-                            .replace(/(?<!^)е(?!$)/g, 'и')
-                            .replace(/(?<!^)Е(?!$)/g, 'И')
+                        let fixedWord = bitsRegularCase[i].replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
+                            .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
+                            .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
+                        fixedWord = fixedWord.charAt(0).toUpperCase() + fixedWord.slice(1)
                         let regex = new RegExp(bitsRegularCase[i], "g")
                         console.log(editedStr, ' replace ' + bitsRegularCase[i] + ' with ' + fixedWord)
                         editedStr = editedStr.replace(regex, "*" + fixedWord)
