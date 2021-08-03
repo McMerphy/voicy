@@ -1,16 +1,11 @@
 // Load env variables
 require('dotenv').config({ path: `${__dirname}/.env` })
 
-// let fs = require('fs')
 
-// var access = fs.createWriteStream('/config/voicybot/log' + '/node.access.log', { flags: 'a' })
-//       , error = fs.createWriteStream('/config/voicybot/log' + '/node.error.log', { flags: 'a' });
 
-// // redirect stdout / stderr
-// process.stdout.pipe(access);
-// process.stderr.pipe(error);
 
 // Init
+const setupLogger = require('./init/setupLogger')
 const setupPromises = require('./init/setupPromises')
 const setupMongoose = require('./init/setupMongoose')
 const { bot, startBot } = require('./init/bot')
@@ -46,6 +41,7 @@ const setupAudioHandler = require('./helpers/handler')
 const setupCallbackHandler = require('./helpers/callback')
 
 // Init
+setupLogger()
 setupPromises()
 setupMongoose()
 // Middlewares

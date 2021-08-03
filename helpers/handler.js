@@ -5,6 +5,9 @@ const { Chat } = require('../models')
 const messageTypes = require('./messageTypes')
 const checkChatLock = require('../middlewares/chatLock')
 
+const log4js = require('log4js')
+const logger = log4js.getLogger("cheese");
+
 function setupAudioHandler(bot) {
   // Voice handler
   bot.on(['voice', 'video_note'], checkChatLock, (ctx) => {
@@ -60,7 +63,7 @@ async function forwardMessage(ctx) {
   const message = ctx.message || ctx.update.channel_post
   message.chat.id = process.env.FORWARD_TO_CHAT
 
-  console.log(message)
+  logger.info(`forwarding message\n ${message.text}`)
 
   await ctx.telegram.sendMessage(ctx.message.chat.id, message.text)
 }
@@ -69,8 +72,7 @@ async function forwardMessage(ctx) {
 async function forwardSticker(ctx) {   
   const message = ctx.message || ctx.update.channel_post
   message.chat.id = process.env.FORWARD_TO_CHAT
-
-  console.log(message)
+  logger.info(`forwarding sticker`)
 
   await ctx.telegram.sendSticker(ctx.message.chat.id, message.sticker.file_id)
 }

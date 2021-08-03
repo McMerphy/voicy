@@ -7,24 +7,27 @@ const setupMongoose = require('./init/setupMongoose')
 const { Chat } = require('./models')
 const { bot } = require('./init/bot')
 
+const log4js = require('log4js')
+const logger = log4js.getLogger("cheese");
+
 setupPromises()
 setupMongoose()
 
 const message = ``
 
 ;(async function run() {
-  console.log('Getting chats count...')
+  logger.deubg('Getting chats count...')
   const ruChatsCount = await Chat.find({ $or: [
     { googleLanguage: 'ru-RU' },
     { witLanguage: 'Russian' },
   ] }).count();
-  console.log(`Got ${ruChatsCount} chats.`)
-  console.log('Getting chats...')
+  logger.deubg(`Got ${ruChatsCount} chats.`)
+  logger.deubg('Getting chats...')
   const ruChats = await Chat.find({ $or: [
     { googleLanguage: 'ru-RU' },
     { witLanguage: 'Russian' },
   ] }, 'id');
-  console.log('Got the chats, sending...')
+  logger.deubg('Got the chats, sending...')
   let successes = 14438;
   for (let i = 34100; i < ruChatsCount; i += 30) {
     const chatsToSend = ruChats.slice(i, i + 30)
@@ -32,7 +35,7 @@ const message = ``
     const promises = [];
     for (const chat of chatsToSend) {
       promises.push(new Promise(async (res) => {
-        console.log(`(${i + j++}/${ruChatsCount} — ${successes}) Sending message to ${chat.id}`)
+        logger.deubg(`(${i + j++}/${ruChatsCount} — ${successes}) Sending message to ${chat.id}`)
         try {
           await bot.telegram.sendMessage(chat.id, message, {
             parse_mode: 'HTML',
@@ -40,7 +43,7 @@ const message = ``
           })
           res(1)
         } catch (err) {
-          console.log(chat.id, err.message)
+          logger.deubg(chat.id, err.message)
           res(0)
         }
       }));
@@ -48,7 +51,7 @@ const message = ``
     successes += (await Promise.all(promises)).reduce((p, c) => p + c, 0)
     await delay(1)
   }
-  console.log(`All done! ${successes} chats received message`)
+  logger.deubg(`All done! ${successes} chats received message`)
   process.exit(0)
 })()
 

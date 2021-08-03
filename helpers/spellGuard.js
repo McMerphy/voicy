@@ -2,6 +2,9 @@ const { report } = require('./report')
 const { linaWords, linaRegexs } = require('./dictionary')
 const { findChat } = require('./db')
 
+const log4js = require('log4js')
+const logger = log4js.getLogger("cheese");
+
 /**
  * Checks messages for words in a dictionary and sends reply if finds it
  * @param {Telegraf:Context} ctx Context of the request
@@ -12,7 +15,7 @@ async function checkSpelling(ctx, text) {
         let dictionary = []
         chat.dictionary.map(elem => dictionary.push(elem))
 
-        console.log(dictionary)
+        logger.info(dictionary)
         let reply = ""
 
         if (chat.smartGuard) {
@@ -41,7 +44,7 @@ async function checkSpelling(ctx, text) {
         }
 
         if (reply.length > 0) {
-            console.log("Reply:", reply)
+            logger.info("Reply:", reply)
             sendReply(ctx, reply)
 
             // editMessage(ctx, reply)
@@ -125,7 +128,7 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
                             .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
                         fixedWord = fixedWord.charAt(0).toUpperCase() + fixedWord.slice(1)
                         let regex = new RegExp(bitsRegularCase[i], "g")
-                        console.log(editedStr, ' replace ' + bitsRegularCase[i] + ' with ' + fixedWord)
+                        logger.info(editedStr, ' replace ' + bitsRegularCase[i] + ' with ' + fixedWord)
                         editedStr = editedStr.replace(regex, "*" + fixedWord)
                     }
                     foundWords.push(str.split(/[\s,.-]+/)[i])
@@ -139,9 +142,9 @@ function contains(str, dictionary, isRegex = false, isEdit = false) {
             for (i = 0; i < bits.length; i++) {
                 if (bits[i] == word) {
                     if (isEdit) {
-                        let fixedWord = bitsRegularCase[i].replace(/^[е|Е|e|E]/g, '')
-                            .replace(/(?<!^)е(?!$)/g, 'и')
-                            .replace(/(?<!^)Е(?!$)/g, 'И')
+                        let fixedWord = bitsRegularCase[i].replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
+                            .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
+                            .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
                         let regex = new RegExp(bitsRegularCase[i], "g")
                         editedStr.replace(regex, "*" + fixedWord)
                     }

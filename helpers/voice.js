@@ -9,6 +9,9 @@ const { isOver10000 } = require('./goldenBorodutchSubCount')
 const messageTypes = require('./messageTypes')
 const checkSpelling = require('./spellGuard')
 
+const log4js = require('log4js')
+const logger = log4js.getLogger("cheese");
+
 const promoExceptions = [
   -1001122726482, -1001140130398, -1001275987479, -1001128503769,
   -1001179199008, -1001260542215,
@@ -127,7 +130,7 @@ async function handleMessage(ctx, messageType = messageTypes.MESSAGE_TEXT) {
  * @param {Mongoose:Chat} chat Chat object where message has been received
  */
 async function sendTranscription(ctx, url, chat, fileId) {
-  console.log("sendTranscription")
+  logger.info("sendTranscription")
   // Get message
   const message = ctx.message || ctx.update.channel_post
   let sentMessage = null
@@ -236,7 +239,7 @@ async function sendAction(ctx, url, chat, fileId) {
  */
 async function updateMessagewithTranscription(ctx, msg, text, chat, markdown) {
   // Create options
-  console.log("updateMessagewithTranscription")
+  logger.info("updateMessagewithTranscription")
   const options = {}
   options.parse_mode = 'Markdown'
   options.disable_web_page_preview = true
@@ -291,7 +294,7 @@ async function updateMessagewithTranscription(ctx, msg, text, chat, markdown) {
  */
 async function sendMessageWithTranscription(ctx, text, chat, markdown) {
   // Get message
-  console.log("sendMessageWithTranscription")
+  logger.info("sendMessageWithTranscription")
   const message = ctx.message || ctx.update.channel_post
   // Create options
   const options = {
