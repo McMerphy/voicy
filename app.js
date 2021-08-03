@@ -1,14 +1,14 @@
 // Load env variables
 require('dotenv').config({ path: `${__dirname}/.env` })
 
-let fs = require('fs')
+// let fs = require('fs')
 
-var access = fs.createWriteStream('/config/voicybot/log' + '/node.access.log', { flags: 'a' })
-      , error = fs.createWriteStream('/config/voicybot/log' + '/node.error.log', { flags: 'a' });
+// var access = fs.createWriteStream('/config/voicybot/log' + '/node.access.log', { flags: 'a' })
+//       , error = fs.createWriteStream('/config/voicybot/log' + '/node.error.log', { flags: 'a' });
 
-// redirect stdout / stderr
-process.stdout.pipe(access);
-process.stderr.pipe(error);
+// // redirect stdout / stderr
+// process.stdout.pipe(access);
+// process.stderr.pipe(error);
 
 // Init
 const setupPromises = require('./init/setupPromises')
