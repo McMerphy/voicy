@@ -142,15 +142,14 @@ function getRandomInt(max) {
 }
 
 function contains(str, dictionary, isRegex = false, isEdit = false) {
-    let bits = str.toLowerCase().split(/[\s,.-]+/)
-    let bitsRegularCase = str.split(/[\s,.-]+/)
+    let bits = str.toLowerCase().split(/[\s,.-\\?\\!]+/)
+    let bitsRegularCase = str.split(/[\s,.-\\?\\!]+/)
 
     let foundWords = []
     let editedStr = str
 
     if (isRegex) {
         for (let regex of dictionary) {
-            console.log(regex)
             for (i = 0; i < bits.length; i++) {
                 if (regex.test(bits[i])) {
                     if (isEdit) {
