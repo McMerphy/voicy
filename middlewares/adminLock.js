@@ -13,7 +13,7 @@ async function isAdmin(ctx, chatId, userId) {
   return admins.includes(userId)
 }
 
-async function isBotOwner(ctx, userId) {
+function isBotOwner(ctx, userId) {
   return userId == process.env.BOT_OWNER
 }
 
@@ -35,8 +35,7 @@ async function passesAdminLock(ctx) {
       }
       // Check if user is an admin
       const isUserAdmin = await isAdmin(ctx, ctx.dbchat.id, ctx.from.id)
-      isUserAdmin = isUserAdmin || isBotOwner(ctx, ctx.from.id)
-      if (!isUserAdmin) {
+      if (!isUserAdmin || !isBotOwner(ctx, ctx.from.id)) {
         // Check if bot is admin
         const isBotAdminInChat = await isBotAdmin(ctx, ctx.dbchat.id)
         if (isBotAdminInChat) {
