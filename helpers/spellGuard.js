@@ -1,9 +1,12 @@
 const { report } = require('./report')
-const { linaWords, linaRegexs } = require('./dictionary')
+const { linaWords } = require('./dictionary')
 const { findChat } = require('./db')
 
 const log4js = require('log4js')
 const logger = log4js.getLogger("cheese");
+
+const linaRegexs = []
+linaRegexs.push(new RegExp(process.env.LINA_REGEX))
 
 /**
  * Checks messages for words in a dictionary and sends reply if finds it
@@ -41,7 +44,6 @@ async function checkSpelling(ctx, text) {
         }
 
         let words1 = contains(text, regexDictionary, true).words
-        console.log(words1)
         if (words1.length != 0) {
             if (reply.length != 0)
                 reply += ', '
@@ -142,7 +144,7 @@ function getRandomInt(max) {
 function contains(str, dictionary, isRegex = false, isEdit = false) {
     let bits = str.toLowerCase().split(/[\s,.-]+/)
     let bitsRegularCase = str.split(/[\s,.-]+/)
-    let decomposedStr = str.split(/[\s,.-]+/)
+
     let foundWords = []
     let editedStr = str
 
