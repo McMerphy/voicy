@@ -2,11 +2,12 @@ const { report } = require('./report')
 const { linaWords } = require('./dictionary')
 const { findChat } = require('./db')
 
-const log4js = require('log4js')
+const log4js = require('log4js');
+const { matchesProperty } = require('lodash');
 const logger = log4js.getLogger("cheese");
 
 const linaRegexs = []
-linaRegexs.push(new RegExp(process.env.LINA_REGEX))
+linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
 
 /**
  * Checks messages for words in a dictionary and sends reply if finds it
@@ -19,16 +20,20 @@ async function checkSpelling(ctx, text) {
         chat.dictionary.map(elem => dictionary.push(elem))
 
         let regexDictionary = []
-        chat.regexDictionary.map(elem => regexDictionary.push(new RegExp(elem, "g")))
+        chat.regexDictionary.map(elem => regexDictionary.push(new RegExp(elem, 'g')))
 
         let reply = ""
         let message_id = 0
 
         if (chat.smartGuard) {
-            let { words, editedStr } = contains(text, linaRegexs, true, true)
-            if (words.length != 0) {
+
+            let { words, editedStr } = fixLenaMatches(text, linaRegexs)
+            if (words.length != 0)
                 message_id = await sendMessage(ctx, chat, editedStr)
-            }
+            // let { words, editedStr } = contains(text, linaRegexs, true, true)
+            // if (words.length != 0) {
+            //     message_id = await sendMessage(ctx, chat, editedStr)
+            // }
         } else {
             let { words, editedStr } = contains(text, linaWords, false, true)
             if (words.length != 0) {
@@ -77,7 +82,7 @@ async function sendReply(ctx, word, message_id) {
     let i = getRandomInt(4)
     let langKey = 'judgemental_' + i
 
-    
+
     await ctx.replyWithMarkdown(ctx.i18n.t(langKey, { word: word }), options)
 }
 
@@ -110,43 +115,43 @@ async function sendMessage(ctx, chat, message) {
  * Deletes message with violating content
  * @param {Telegraf:Context} ctx Context of the request
  */
- async function deleteMessage(ctx, message) {
+async function deleteMessage(ctx, message) {
     await ctx.telegram.deleteMessage(ctx.message.chat.id, message.message_id)
 }
 
-/**
- * Sends reply to a message with violating content
- * @param {Telegraf:Context} ctx Context of the request
- */
-async function editMessage(ctx, word) {
-    const message = ctx.message || ctx.update.channel_post
-    const options = {}
-    options.parse_mode = 'Markdown'
-    options.disable_web_page_preview = true
-    try {
-        await ctx.telegram.editMessageText(
-            message.chat.id,
-            message.message_id,
-            null,
-            "Я мразота конченая пишу плохие слова",
-            options
-        )
-
-    } catch (err) {
-        report(ctx, err, 'handleMessage')
-    }
-}
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function contains(str, dictionary, isRegex = false, isEdit = false) {
+function fixLenaMatches(str, regexes) {
+    let lowStr = str.toLowerCase()
+    let editedStr = str
+    let words = []
+
+    for (let regex of regexes) {
+        while (match = regex.exec(lowStr)) {
+            words.push(match[0])
+            let strToReplace = str.substring(match.index, match.index + match[0].length)
+            let replacementStr = strToReplace.replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
+                .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
+                .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
+            logger.info(`replacing ${strToReplace} with ${replacementStr}`)
+            editedStr = editedStr.replace(strToReplace, replacementStr)
+        }
+    }
+ 
+
+    return {words: words, editedStr: editedStr}
+}
+
+function contains(str, dictionary, isRegex = false, isEdit = false, split = false) {
     let bits = str.toLowerCase().split(/[\s,.-\\?\\!]+/)
     let bitsRegularCase = str.split(/[\s,.-\\?\\!]+/)
 
     let foundWords = []
     let editedStr = str
+
 
     if (isRegex) {
         for (let regex of dictionary) {
