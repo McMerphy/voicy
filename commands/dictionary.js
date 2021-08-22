@@ -83,12 +83,14 @@ function setupDictionary(bot) {
     if (words.length > 0) {
       let dictionary = []
       let addedWords = []
+      let wasAdded = false
       ctx.dbchat.dictionary.map(elem => dictionary.push(elem))
 
       for (let word of words) {
         if (!dictionary.includes(word)) {
           ctx.dbchat.dictionary.push(word)
           addedWords.push(word)
+          wasAdded = true
         }
       }
 
@@ -100,7 +102,7 @@ function setupDictionary(bot) {
           ctx.i18n.t('addword_true', { words: regex, dictionary: dictionary.map((word, i) => i + '. ' + word).join('  ') }))
       else
         await ctx.replyWithMarkdown(
-          ctx.i18n.t('addword_false', { dictionary: allWords.join(' ') }))
+          ctx.i18n.t('addword_false', { dictionary: dictionary.map((word, i) => i + '. ' + word).join('  ')  }))
     } else {
       let dictionary = ctx.dbchat.dictionary.concat(ctx.dbchat.regexDictionary)
       await ctx.replyWithMarkdown(
@@ -134,7 +136,7 @@ function setupDictionary(bot) {
           ctx.i18n.t('addword_true', { words: regex, dictionary: dictionary.map((word, i) => i + '. ' + word).join('  ') }))
       else
         await ctx.replyWithMarkdown(
-          ctx.i18n.t('addword_false', { dictionary: allWords.join(' ') }))
+          ctx.i18n.t('addword_false', { dictionary: dictionary.map((word, i) => i + '. ' + word).join('  ')  }))
     } else {
       let dictionary = ctx.dbchat.dictionary.concat(ctx.dbchat.regexDictionary)
       await ctx.replyWithMarkdown(
