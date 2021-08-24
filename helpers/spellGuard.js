@@ -8,6 +8,7 @@ const logger = log4js.getLogger("cheese");
 
 const linaRegexs = []
 linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
+const excludes = JSON.parse(process.env.LINA_REGEX_EXCLUDES || "[]")
 
 /**
  * Checks messages for words in a dictionary and sends reply if finds it
@@ -27,7 +28,7 @@ async function checkSpelling(ctx, text) {
 
         if (chat.smartGuard) {
 
-            let { words, editedStr } = fixLenaMatches(text, linaRegexs)
+            let { words, editedStr } = fixLenaMatches(text, linaRegexs, excludes)
             if (words.length != 0)
                 message_id = await sendMessage(ctx, chat, editedStr)
             // let { words, editedStr } = contains(text, linaRegexs, true, true)
@@ -92,7 +93,7 @@ async function sendReply(ctx, word, message_id) {
  */
 async function sendMessage(ctx, chat, message) {
     if (chat.correctionWithDelete)
-        message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n ${message}\n`
+        message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n${message}\n`
     const options = {}
     options.parse_mode = 'Markdown'
     options.disable_web_page_preview = true
@@ -124,20 +125,34 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function fixLenaMatches(str, regexes) {
+function fixLenaMatches(str, regexes, excludes) {
     let lowStr = str.toLowerCase()
     let editedStr = str
     let words = []
 
     for (let regex of regexes) {
-        while (match = regex.exec(lowStr)) {
-            words.push(match[0])
+        while (match = regex.exec(lowStr)) {         
+            // check includes
+            let matchEndIndex = match.index + match[0].length
+            let isExluded = false
+            for(let exclude of excludes) {
+                let substr = str.substring(matchEndIndex - exclude.length, matchEndIndex)
+                console.log(`substr ${substr} exclude ${exclude}`)
+                if (exclude == substr) {
+                    isExluded = true
+                    break
+                }
+            }
+            if(isExluded)
+                continue
+
             let strToReplace = str.substring(match.index, match.index + match[0].length)
             let replacementStr = strToReplace.replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
                 .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
                 .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
             logger.info(`replacing ${strToReplace} with ${replacementStr}`)
             editedStr = editedStr.replace(strToReplace, replacementStr)
+            words.push(match[0])
         }
     }
  
