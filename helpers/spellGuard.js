@@ -92,6 +92,9 @@ async function sendReply(ctx, word, message_id) {
  * @param {Telegraf:Context} ctx Context of the request
  */
 async function sendMessage(ctx, chat, message) {
+    message = message.replace(/\_/g, "\\_")
+    message = message.replace(/\*/g, "\\*")
+    message = message.replace(/\#/g, "\\#")
     if (chat.correctionWithDelete)
         message = `*${ctx.message.from.first_name} @${ctx.message.from.username}*, сказал(а):\n${message}\n`
     const options = {}
@@ -137,7 +140,6 @@ function fixLenaMatches(str, regexes, excludes) {
             let isExluded = false
             for(let exclude of excludes) {
                 let substr = str.substring(matchEndIndex - exclude.length, matchEndIndex)
-                console.log(`substr ${substr} exclude ${exclude}`)
                 if (exclude == substr) {
                     isExluded = true
                     break
