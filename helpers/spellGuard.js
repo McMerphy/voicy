@@ -9,6 +9,7 @@ const logger = log4js.getLogger("cheese");
 const linaRegexs = []
 linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
 const excludes = JSON.parse(process.env.LINA_REGEX_EXCLUDES || "[]")
+const immuneUsers = JSON.parse(process.env.IMMUNE_USERS || "[]")
 
 /**
  * Checks messages for words in a dictionary and sends reply if finds it
@@ -16,6 +17,13 @@ const excludes = JSON.parse(process.env.LINA_REGEX_EXCLUDES || "[]")
  */
 async function checkSpelling(ctx, text) {
     try {
+        let chatImmuneUsers = immuneUsers
+            .filter(obj => { return obj.chat_id == ctx.chat.id } )
+            .reduce((arr, item) => { arr.push(...(item.users)); return  arr }, [])
+
+        if (chatImmuneUsers.includes(ctx.from.id))
+            return
+            
         const chat = await findChat(ctx.chat.id)
         let dictionary = []
         chat.dictionary.map(elem => dictionary.push(elem))
