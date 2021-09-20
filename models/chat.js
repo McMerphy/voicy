@@ -45,6 +45,11 @@ const chatSchema = new Schema(
       required: true,
       default: true,
     },
+    reverseEnabled: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     smartGuard: {
       type: Boolean,
       required: true,

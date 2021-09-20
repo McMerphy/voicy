@@ -7,7 +7,19 @@ const { matchesProperty } = require('lodash');
 const logger = log4js.getLogger("cheese");
 
 const linaRegexs = []
-linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
+const lenaRegexs = []
+
+
+;(function init() {
+    try {
+        linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
+        lenaRegexs.push(new RegExp(process.env.LENA_REGEX, 'g'))
+    } catch (err) {
+        logger.error('SpellGuard initialization failed')
+        logger.error(err)
+    }
+})()
+
 const excludes = JSON.parse(process.env.LINA_REGEX_EXCLUDES || "[]")
 const immuneUsers = JSON.parse(process.env.IMMUNE_USERS || "[]")
 
@@ -35,14 +47,15 @@ async function checkSpelling(ctx, text) {
         let message_id = 0
 
         if (chat.smartGuard) {
+            let regexes = linaRegexs
+            if (chat.reverseEnabled) {
+                regexes = lenaRegexs
+            }
 
-            let { words, editedStr } = fixLenaMatches(text, linaRegexs, excludes)
+            let { words, editedStr } = fixLenaMatches(text, lenaRegexs, excludes, chat.reverseEnabled)
             if (words.length != 0)
                 message_id = await sendMessage(ctx, chat, editedStr)
-            // let { words, editedStr } = contains(text, linaRegexs, true, true)
-            // if (words.length != 0) {
-            //     message_id = await sendMessage(ctx, chat, editedStr)
-            // }
+
         } else {
             let { words, editedStr } = contains(text, linaWords, false, true)
             if (words.length != 0) {
@@ -136,7 +149,7 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function fixLenaMatches(str, regexes, excludes) {
+function fixLenaMatches(str, regexes, excludes, reverseEnabled = false) {
     let lowStr = str.toLowerCase()
     let editedStr = str
     let words = []
@@ -157,9 +170,14 @@ function fixLenaMatches(str, regexes, excludes) {
                 continue
 
             let strToReplace = str.substring(match.index, match.index + match[0].length)
-            let replacementStr = strToReplace.replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
-                .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
-                .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
+            let replacementStr = ''
+            if (reverseEnabled)
+                replacementStr = strToReplace.replace(/(?<!^)[i|и|і](?!$)/g, 'е')
+                .replace(/(?<!^)[И|I|І](?!$)/g, 'Е')
+            else 
+                replacementStr = strToReplace.replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
+                    .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
+                    .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
             logger.info(`replacing ${strToReplace} with ${replacementStr}`)
             editedStr = editedStr.replace(strToReplace, replacementStr)
             words.push(match[0])
