@@ -1,0 +1,39 @@
+version: "3.2"
+services:
+  viocy:
+    container_name: voicy-node
+    image: alexey/voicy-node
+    restart: always
+    build: .
+    links:
+      - mongo
+    depends_on:
+    - mongo
+    volumes:
+      - ..:/app/voicy
+      - ../voicy_node_modules:/app/voicy/node_modules
+    # - type: volume
+    #   source: config
+    #   target: /config
+    #   volume:
+    #     nocopy: false
+      - type: bind
+        source: /config
+        target: /config
+
+  #  networks:
+  #   - mongo-net
+
+  mongo:
+    container_name: mongo
+    image: mongo:4.2.0
+    volumes:
+      - type: bind
+        source: /config/voicybot/mongodb
+        target: /data/db
+      - type: bind
+        source: /var/log/mongodb
+        target: /config/voicyot/mongodb_log
+
+    ports:
+      - '27018:27017'
