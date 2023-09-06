@@ -64,3 +64,4 @@ rmword_false: 'Из словаря ничего не удалено\n*Слова
 dictionary_false: 'Вы должны вписать через пробел слова для осуждения после команды /dictionary'
 dictionary_true: '*Словарь*:\n**${dictionary}**'
 dictionary_cleaned: 'Словарь очищен'
+bdays: "@SapraudnyZlodey 20.04\n@icepow3 25.07\n@slavesfuckyou 01.08\n"

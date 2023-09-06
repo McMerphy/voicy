@@ -11,7 +11,7 @@ function setupLogger() {
 
     const logger = log4js.getLogger("cheese");
 
-    logger.info('logger started')
+    logger.info(`logger started for worker ${process.pid} `)
 }
 
 module.exports = setupLogger

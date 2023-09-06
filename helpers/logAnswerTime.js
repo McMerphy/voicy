@@ -6,5 +6,6 @@ module.exports = function logAnswerTime(ctx, name) {
     `${name} answered in ${(new Date().getTime() - ctx.timeReceived.getTime()) /
       1000}s, CHAT: ${ctx.message.chat.id} - ${ctx.message.chat.title} ... FROM: ${ctx.message.from.id} - ${ctx.message.from.username}`
   )
-  logger.info(ctx.message.text)
+  if (ctx.message.text)
+    logger.info(ctx.message.text)
 }
