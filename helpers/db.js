@@ -1,5 +1,5 @@
 // Dependencies
-const { Voice, Chat } = require('../models')
+const { Voice, Chat, User } = require('../models')
 
 /**
  * Searches for chat by it's id, creates new chat if doesn't exist yet
@@ -56,9 +56,26 @@ function findVoice(url, language, engine) {
   return Voice.findOne({ url, language, engine })
 }
 
+/**
+ * Searches for chat by it's id, creates new chat if doesn't exist yet
+ * @param {Telegram:ChatId} id Id of the chat to search
+ * @returns Chat with the specified id
+ */
+async function GetChatUsers(id) {
+  let chat = await Chat.findOne({ id })
+  if (!chat) {
+    chat = new Chat({ id })
+    chat = await chat.save()
+  }
+  let users = await User.find({id: {$in: chat.users}})
+  
+  return users
+}
+
 // Exports
 module.exports = {
   findChat,
   addVoice,
   findVoice,
+  GetChatUsers
 }

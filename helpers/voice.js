@@ -80,6 +80,8 @@ async function handleMessage(ctx, messageType = messageTypes.MESSAGE_TEXT) {
           return
         checkSpelling(ctx, message.text)
         break;
+      case messageTypes.MESSAGE_CHATGPT:
+      
       case messageTypes.MESSAGE_VOICE:
       case messageTypes.MESSAGE_AUDIO:
         if (!chat.checkVoiceSpelling && !chat.voiceToText) 
@@ -244,10 +246,6 @@ async function updateMessagewithTranscription(ctx, msg, text, chat, markdown) {
   options.parse_mode = 'Markdown'
   options.disable_web_page_preview = true
   // Add promo
-  if (chat.showPromo && text && !promoExceptions.includes(ctx.chat.id)) {
-    const promoText = promoTexts[isRuChat(chat) ? 'ru' : 'en']()
-    text = `${text}\n${promoText}`
-  }
   if (chat.checkVoiceSpelling) {
     checkSpelling(ctx, text)
   }

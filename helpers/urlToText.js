@@ -1,7 +1,7 @@
 // Dependencies
 const { Lock } = require('semaphore-async-await')
 const cluster = require('cluster')
-const numCPUs = require('os').cpus().length
+let numCPUs = require('os').cpus().length
 const uuid = require('uuid/v4')
 const speechAPI = require('./speechAPI')
 const download = require('download')
@@ -11,6 +11,8 @@ const flac = require('./flac')
 const { report } = require('./report')
 const tryDeletingFile = require('./deleteFile')
 
+
+numCPUs = numCPUs < 2 ? numCPUs : 2
 // Generate cluster workers
 const workers = []
 if (cluster.isMaster) {

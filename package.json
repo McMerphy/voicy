@@ -9,7 +9,7 @@
     "node": ">=10.0"
   },
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon app.js -L",
     "localize": "node localize.js",
     "sendout": "node sendout.js",
     "upload-translations": "node scripts/upload.js",
@@ -29,6 +29,7 @@
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "mongoose": "^4.9.4",
+    "openai": "^3.2.1",
     "semaphore-async-await": "^1.5.1",
     "telegraf": "^3.27.1",
     "telegraf-i18n": "backmeupplz/telegraf-i18n#78ee719cb8be9413d64a3a14325209f3a793a541",
@@ -42,6 +43,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-promise": "^3.4.0",
     "eslint-plugin-react": "^6.8.0",
-    "flat": "^5.0.0"
+    "flat": "^5.0.0",
+    "nodemon": "^2.0.15"
   }
 }

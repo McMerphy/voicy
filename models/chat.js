@@ -91,6 +91,11 @@ const chatSchema = new Schema(
     },
     // Added just as a virtual variable
     language: String,
+    users: {
+      type: Array,
+      required: true,
+      default: []
+    },
   },
   { timestamps: true, usePushEach: true}
 )

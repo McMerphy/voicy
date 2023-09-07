@@ -9,16 +9,25 @@ const logger = log4js.getLogger("cheese");
 const linaRegexs = []
 const lenaRegexs = []
 
+const MAX_MATCHES_IN_MESSAGE = 32
 
-;(function init() {
-    try {
-        linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
-        lenaRegexs.push(new RegExp(process.env.LENA_REGEX, 'g'))
-    } catch (err) {
-        logger.error('SpellGuard initialization failed')
-        logger.error(err)
-    }
-})()
+    ; (function init() {
+        try {
+            logger.info(`Guard initializtion for worker ${process.pid}`)
+            if (process.env.LINA_REGEX) {
+                logger.info(`Including LINA_REGEX to a checklist: ${process.env.LINA_REGEX}`)
+                linaRegexs.push(new RegExp(process.env.LINA_REGEX, 'g'))
+            }
+            if (process.env.LENA_REGEX) {
+                logger.info(`Including LENA_REGEX to a checklist: ${process.env.LENA_REGEX}`)
+                lenaRegexs.push(new RegExp(process.env.LENA_REGEX, 'g'))
+            }
+        } catch (err) {
+            logger.error('SpellGuard initialization failed')
+            logger.error(err)
+        }
+    })()
+
 
 const excludes = JSON.parse(process.env.LINA_REGEX_EXCLUDES || "[]")
 const immuneUsers = JSON.parse(process.env.IMMUNE_USERS || "[]")
@@ -30,11 +39,13 @@ const immuneUsers = JSON.parse(process.env.IMMUNE_USERS || "[]")
 async function checkSpelling(ctx, text) {
     try {
         let chatImmuneUsers = immuneUsers
-            .filter(obj => { return obj.chat_id == ctx.chat.id } )
-            .reduce((arr, item) => { arr.push(...(item.users)); return  arr }, [])
+            .filter(obj => { return obj.chat_id == ctx.chat.id })
+            .reduce((arr, item) => { arr.push(...(item.users)); return arr }, [])
 
-        if (chatImmuneUsers.includes(ctx.from.id))
+        if (chatImmuneUsers.includes(ctx.from.id)) {
+            logger.info(`user ${ctx.from.id} is immune, message will not be validated`)
             return
+        }
             
         const chat = await findChat(ctx.chat.id)
         let dictionary = []
@@ -52,7 +63,7 @@ async function checkSpelling(ctx, text) {
                 regexes = lenaRegexs
             }
 
-            let { words, editedStr } = fixLenaMatches(text, lenaRegexs, excludes, chat.reverseEnabled)
+            let { words, editedStr } = fixLenaMatches(text, regexes, excludes, chat.reverseEnabled)
             if (words.length != 0)
                 message_id = await sendMessage(ctx, chat, editedStr)
 
@@ -154,38 +165,49 @@ function fixLenaMatches(str, regexes, excludes, reverseEnabled = false) {
     let editedStr = str
     let words = []
 
+    logger.info(`find lena matches`)
+
     for (let regex of regexes) {
-        while (match = regex.exec(lowStr)) {         
-            // check includes
+        // In case if there are too many matches in one message we should brake
+        // the loop (vs spam or bad written regex)
+        let guardCounter = 0
+        while (match = regex.exec(lowStr)) {
             let matchEndIndex = match.index + match[0].length
             let isExluded = false
-            for(let exclude of excludes) {
+            for (let exclude of excludes) {
                 let substr = str.substring(matchEndIndex - exclude.length, matchEndIndex)
                 if (exclude == substr) {
                     isExluded = true
                     break
                 }
             }
-            if(isExluded)
+            if (isExluded)
                 continue
 
             let strToReplace = str.substring(match.index, match.index + match[0].length)
             let replacementStr = ''
             if (reverseEnabled)
                 replacementStr = strToReplace.replace(/(?<!^)[i|и|і](?!$)/g, 'е')
-                .replace(/(?<!^)[И|I|І](?!$)/g, 'Е')
-            else 
+                    .replace(/(?<!^)[И|I|І](?!$)/g, 'Е')
+            else
                 replacementStr = strToReplace.replace(/^[е|Е|e|E|а|А|о|О|o|O|a|A]+/g, '')
-                    .replace(/(?<!^)[е|e|ё](?!$)/g, 'и')
-                    .replace(/(?<!^)[Е|E|Ё](?!$)/g, 'И')
+                    .replace(/(?<!^)[е|ё](?!$)/g, 'и')
+                    .replace(/(?<!^)[e](?!$)/g, 'i')
+                    .replace(/(?<!^)[Е|Ё](?!$)/g, 'И')
+                    .replace(/(?<!^)[E](?!$)/g, 'I')
             logger.info(`replacing ${strToReplace} with ${replacementStr}`)
             editedStr = editedStr.replace(strToReplace, replacementStr)
             words.push(match[0])
+            if (guardCounter++ > MAX_MATCHES_IN_MESSAGE) {
+                logger.info(`reached max number in one message: ${MAX_MATCHES_IN_MESSAGE}`)
+                break
+            }
+
         }
     }
- 
 
-    return {words: words, editedStr: editedStr}
+
+    return { words: words, editedStr: editedStr }
 }
 
 function contains(str, dictionary, isRegex = false, isEdit = false, split = false) {

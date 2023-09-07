@@ -1,39 +1,32 @@
 version: "3.2"
 services:
-  viocy:
-    container_name: voicy-node
-    image: alexey/voicy-node
+  voicy:
+    container_name: lehabot-node
+    image: alexey/lehabot-dev
     restart: always
-    build: .
-    links:
-      - mongo
+    command: yarn start
+    working_dir: /app/lehabot
+    build:
+      context: .
+      dockerfile: Dockerfile-base
     depends_on:
     - mongo
+    external_links:
+    - mongo
     volumes:
-      - ..:/app/voicy
-      - ../voicy_node_modules:/app/voicy/node_modules
-    # - type: volume
-    #   source: config
-    #   target: /config
-    #   volume:
-    #     nocopy: false
-      - type: bind
-        source: /config
-        target: /config
+      - ..:/app/lehabot
+      - ../nodemodules:/app/lehabot/node_modules
 
-  #  networks:
+  # networks:
   #   - mongo-net
 
   mongo:
     container_name: mongo
-    image: mongo:4.2.0
+    image: mongo:4.4.0
     volumes:
       - type: bind
-        source: /config/voicybot/mongodb
+        source: ../data/db
         target: /data/db
-      - type: bind
-        source: /var/log/mongodb
-        target: /config/voicyot/mongodb_log
 
     ports:
-      - '27018:27017'
+      - '27017:27017'

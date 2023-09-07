@@ -1,16 +1,30 @@
 // Dependencies
 const handleMessage = require('./voice')
+const { processMessageStat, processSticker } = require('./statistics')
 const logAnswerTime = require('../helpers/logAnswerTime')
 const { Chat } = require('../models')
 const messageTypes = require('./messageTypes')
 const checkChatLock = require('../middlewares/chatLock')
+const { openaiProcessMessage } = require('./chatgpt')
 
 const log4js = require('log4js')
 const logger = log4js.getLogger("cheese");
 
 function setupAudioHandler(bot) {
   // Voice handler
-  bot.on(['voice', 'video_note'], checkChatLock, (ctx) => {
+  bot.on(['voice'], checkChatLock, (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_VOICE)
+    // Handle voice
+    handleMessage(ctx, messageTypes.MESSAGE_VOICE)
+    // Log time
+    logAnswerTime(ctx, 'voice')
+    // Save last voice message sent at
+    updateLastVoiceMessageSentAt(ctx)
+  })
+
+  // Voice handler
+  bot.on(['video_note'], checkChatLock, (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_VIDEOMES)
     // Handle voice
     handleMessage(ctx, messageTypes.MESSAGE_VOICE)
     // Log time
@@ -19,37 +33,55 @@ function setupAudioHandler(bot) {
     updateLastVoiceMessageSentAt(ctx)
   })
   // Audio handler
-  bot.on(['audio', 'document'], checkChatLock, async (ctx) => {
+  bot.on(['audio'], checkChatLock, async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_AUDIO)
     // Handle voice
     handleDocumentOrAudio(ctx)
     // Log time
-    logAnswerTime(ctx, checkChatLock, 'voice.document')
+    logAnswerTime(ctx, 'voice.document')
     // Save last voice message sent at
     updateLastVoiceMessageSentAt(ctx)
   })
 
+  bot.on(['document'], async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_FILE)
+    // Handle voice
+    handleDocumentOrAudio(ctx)
+    // Log time
+    logAnswerTime(ctx, 'voice.document')
+    // Save last voice message sent at
+    updateLastVoiceMessageSentAt(ctx)
+  })
+  bot.on(['video'], async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_VIDEO)
+    // Handle voice
+    handleDocumentOrAudio(ctx)
+    // Log time
+    logAnswerTime(ctx, 'voice.document')
+    // Save last voice message sent at
+    updateLastVoiceMessageSentAt(ctx)
+  })
   // Text handler
   bot.on('text', checkChatLock, async (ctx) => {
     const message = ctx.message || ctx.update.channel_post
+    
     if (process.env.FORWARD_FROM_CHAT == message.chat.id)
     {
       await forwardMessage(ctx)
       return
     }
 
-    handleMessage(ctx, messageTypes.MESSAGE_TEXT)
-    // Log time
-    logAnswerTime(ctx, 'text')
-    // Save last voice message sent at
-    // updateLastVoiceMessageSentAt(ctx)
-  })
-
-  bot.on('sticker' ,async (ctx) => {
-    const message = ctx.message || ctx.update.channel_post
-    if (process.env.FORWARD_FROM_CHAT == message.chat.id)
+    if (message.text.startsWith('lehabot') || message.text.startsWith('лехабот'))
     {
-      await forwardSticker(ctx)
-      return
+      await processMessageStat(ctx, messageTypes.MESSAGE_CHATGPT)
+      const botReplyText = await openaiProcessMessage(ctx)
+
+      if (botReplyText) await ctx.reply(botReplyText, {
+          reply_to_message_id: ctx.message.message_id
+      })
+    } else {
+      await processMessageStat(ctx, messageTypes.MESSAGE_TEXT)
+      await handleMessage(ctx, messageTypes.MESSAGE_TEXT)
     }
 
     // Log time
@@ -57,7 +89,31 @@ function setupAudioHandler(bot) {
     // Save last voice message sent at
     // updateLastVoiceMessageSentAt(ctx)
   })
+
+  bot.on('sticker', async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_STICKER)
+    const message = ctx.message || ctx.update.channel_post
+    if (process.env.FORWARD_FROM_CHAT == message.chat.id) {
+      await forwardSticker(ctx)
+      return
+    }
+    logAnswerTime(ctx, 'sticker')
+  })
+
+  bot.on('link', async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_LINK)
+
+    logAnswerTime(ctx, 'link')
+  })
+
+  bot.on('gif', async (ctx) => {
+    processMessageStat(ctx, messageTypes.MESSAGE_GIF)
+
+    logAnswerTime(ctx, 'gif')
+  })
 }
+
+
 
 async function forwardMessage(ctx) {   
   const message = ctx.message || ctx.update.channel_post
