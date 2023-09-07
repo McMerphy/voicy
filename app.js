@@ -3,6 +3,8 @@ require('dotenv').config({ path: `${__dirname}/.env` })
 
 // Init
 const setupLogger = require('./init/setupLogger')
+// Init
+setupLogger()
 const setupPromises = require('./init/setupPromises')
 const setupMongoose = require('./init/setupMongoose')
 const { bot, startBot } = require('./init/bot')
@@ -14,6 +16,7 @@ const setupAttachChat = require('./middlewares/attachChat')
 const setupI18N = require('./middlewares/i18n')
 // Commands
 const setupHelp = require('./commands/help')
+const setupBday = require('./commands/bday')
 const { setupStart } = require('./commands/start')
 const setupLanguage = require('./commands/language')
 const setupEngine = require('./commands/engine')
@@ -39,8 +42,7 @@ const setupAudioHandler = require('./helpers/handler')
 // Callbacks
 const setupCallbackHandler = require('./helpers/callback')
 
-// Init
-setupLogger()
+
 setupPromises()
 setupMongoose()
 // Middlewares
@@ -52,6 +54,7 @@ setupI18N(bot)
 // setupCheckingCredentials(bot)
 // Commands
 setupHelp(bot)
+setupBday(bot)
 setupStart(bot)
 setupLanguage(bot)
 // setupEngine(bot)

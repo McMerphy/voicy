@@ -1,3 +1,7 @@
 node_modules
 .env
 updates.log
+data
+mongo-volume
+node_modules_docker
+nodemodules

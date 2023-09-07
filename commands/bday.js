@@ -3,16 +3,15 @@ const logAnswerTime = require('../helpers/logAnswerTime')
 const checkAdminLock = require('../middlewares/adminLock')
 
 function setupBday(bot) {
-  bot.help(ctx => {
-    handle(ctx)
+  bot.command('bdays', async ctx => {
+    await handle(ctx)
   })
+
 }
 
 async function handle(ctx) {
-  await ctx.replyWithMarkdown(ctx.i18n.t('bday'), {
-    disable_web_page_preview: true,
-  })
-  logAnswerTime(ctx, '/bday')
+  await ctx.replyWithMarkdown(ctx.i18n.t('bdays'))
+  // logAnswerTime(ctx, '/bday')
 }
 
 // Exports
