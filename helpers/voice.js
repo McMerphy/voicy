@@ -1,6 +1,6 @@
 // Dependencies
 const urlFinder = require('./url')
-const { findChat, addVoice } = require('./db')
+const { findChat, addVoice, findUser, addUser } = require('./db')
 const { report } = require('./report')
 const urlToText = require('./urlToText')
 const { isRuChat } = require('./isRuChat')
@@ -73,6 +73,16 @@ async function handleMessage(ctx, messageType = messageTypes.MESSAGE_TEXT) {
     const chat = await findChat(ctx.chat.id)
     // Get message
     const message = ctx.message || ctx.update.channel_post
+
+    // if (message.from.id) 
+    // {
+    //   console.log("message from ", from)
+    //   const user = await findUser(message.from.id)
+    //   console.log("Found user: ", user)
+    //   if (!user) {
+    //     const user = await addUser(message.from)
+    //   }
+    // }
 
     switch (messageType) {
       case messageTypes.MESSAGE_TEXT:

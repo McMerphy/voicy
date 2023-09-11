@@ -37,13 +37,11 @@ function hasReachedRequestLimit(userId, timeFrame, limit)
 }
 
 async function openaiProcessMessage(ctx) {
+    const message = ctx.message
+    let userid = message.from.id
     try {
         // Get chat
         logger.info('process message with OpenAI')
-
-        const message = ctx.message
-
-        let userid = message.from.id
         console.log(`message from ${userid}`)
 
 
